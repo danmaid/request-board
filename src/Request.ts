@@ -44,6 +44,6 @@ function getRequests(): Request[] {
   return getRequestsFromEvents([])
 }
 
-function getWantedRequests(): Request[] {
+export function getWantedRequests(): Request[] {
   return getRequests().filter((v) => v.isWanted())
 }

@@ -5,9 +5,30 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Vite + TS</title>
+    <style>
+      :root {
+        background-color: #000;
+        color: #fff;
+      }
+      dm-request-board {
+        display: block;
+        width: 1400px;
+        height: 900px;
+        border: 1px solid;
+      }
+      dm-request-board > * {
+        width: 105mm;
+        height: 148mm;
+        background-color: #aaaa;
+      }
+    </style>
   </head>
   <body>
-    <div id="app"></div>
-    <script type="module" src="/src/main.ts"></script>
+    <dm-request-board id="board">
+      <div id="xxx">xxx</div>
+      <div id="yyy">yyy</div>
+      <div id="zzz">zzz</div>
+    </dm-request-board>
+    <script type="module" src="/src/board.ts"></script>
   </body>
 </html>
