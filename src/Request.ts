@@ -47,3 +47,26 @@ function getRequests(): Request[] {
 export function getWantedRequests(): Request[] {
   return getRequests().filter((v) => v.isWanted())
 }
+
+function limitOffset<T>(array: T[], limit = 100, offset = 0): T[] {
+  return array.slice(offset, limit + offset)
+}
+
+function pickFields<T extends Record<string, unknown>, K extends string>(value: T, fields: K[]): Partial<T> {
+  const x: [K, unknown][] = Object.entries(value)
+  const y = Object.fromEntries(x)
+  return y
+}
+
+interface QueryParams extends Record<string, unknown> {
+  limit?: number
+  offset?: number
+  fields: string[]
+  filter?: 'partial' | 'exact' | 'forward' | 'backward'
+  sort?: string[]
+}
+export function getList({ limit, offset, fields, sort, filter }: QueryParams): unknown[] {
+  const list: unknown[] = []
+  const x = limitOffset(list, limit, offset)
+  return []
+}
