@@ -52,21 +52,41 @@ function limitOffset<T>(array: T[], limit = 100, offset = 0): T[] {
   return array.slice(offset, limit + offset)
 }
 
-function pickFields<T extends Record<string, unknown>, K extends string>(value: T, fields: K[]): Partial<T> {
-  const x: [K, unknown][] = Object.entries(value)
-  const y = Object.fromEntries(x)
-  return y
+function pickFields<T extends Record<string, unknown>>(value: T, fields: (keyof T)[]): Partial<T> {
+  return Object.fromEntries(Object.entries(value).filter(([k]) => fields.includes(k))) as Partial<T>
+}
+
+function getStringFilter(mode: FilterMode = 'partial'): (value: string, expected: string) => boolean {
+  if (mode === 'partial') return (v, e) => !!v.match(e)
+  if (mode === 'exact') return (v, e) => v === e
+  if (mode === 'forward') return (v, e) => v.startsWith(e)
+  if (mode === 'backward') return (v, e) => v.endsWith(e)
+  throw Error('Unsupport filter mode.', mode)
+}
+
+type FilterMode = 'partial' | 'exact' | 'forward' | 'backward'
+function kvFilter<T extends Record<string, unknown>>(value: T, kv: Partial<T>, mode?: FilterMode): boolean {
+  const stringFilter = getStringFilter(mode)
+  for (const [k, e] of Object.entries(kv)) {
+    const v = value[k]
+    if (v == e) continue
+    if (typeof v !== 'string') return false
+    if (!stringFilter(v, e)) return false
+  }
+  return true
 }
 
 interface QueryParams extends Record<string, unknown> {
   limit?: number
   offset?: number
-  fields: string[]
-  filter?: 'partial' | 'exact' | 'forward' | 'backward'
+  fields?: string[]
+  filter?: FilterMode
   sort?: string[]
 }
-export function getList({ limit, offset, fields, sort, filter }: QueryParams): unknown[] {
-  const list: unknown[] = []
+export function getList({ limit, offset, fields, sort, filter, ...kv }: QueryParams): unknown[] {
+  const list: Record<string, unknown>[] = []
   const x = limitOffset(list, limit, offset)
-  return []
+  const y = Object.keys(kv).length > 0 ? x.filter((v) => kvFilter(v, kv, filter)) : x
+  const z = fields ? y.map((v) => pickFields(v, fields)) : y
+  return z
 }
