@@ -1,16 +1,14 @@
 export class DmBoard extends HTMLElement {
+  dragging?: HTMLElement
+  offsetX?: number
+  offsetY?: number
+
   constructor() {
     super()
-    const root = this.attachShadow({ mode: 'open' })
-    root.innerHTML = `
-      <div>hoge</div>
-      <div style="opacity: 0.2"><slot>slot</slot></div>
-      <div><slot name="named">named</slot></div>
-      <slot name="item"><template>hoge</template></slot>
-    `
-    const itemSlot = root.querySelector('slot[name="item"]') as HTMLSlotElement
-    const itemTemplate = itemSlot.assignedElements({ flatten: true })[0]
-    console.log(itemTemplate)
+    const observer = new MutationObserver((records) => {
+      for (const r of records) for (const n of r.addedNodes) if (n instanceof HTMLElement) this.modifyChild(n)
+    })
+    observer.observe(this, { childList: true })
     this.ondragover = (ev) => {
       if (!ev.dataTransfer) return
       ev.preventDefault()
@@ -27,29 +25,29 @@ export class DmBoard extends HTMLElement {
     }
   }
 
-  dragging?: HTMLElement
-  offsetX?: number
-  offsetY?: number
+  modifyChild(child: HTMLElement) {
+    child.style.position = 'absolute'
+    child.draggable = true
+    child.ondragstart = this.getChildDragStart(child)
+    child.dispatchEvent(new CustomEvent('moved', { bubbles: true }))
+  }
+
+  getChildDragStart(child: HTMLElement): HTMLElement['ondragstart'] {
+    return (ev) => {
+      this.dragging = child
+      const rect = child.getBoundingClientRect()
+      this.offsetX = ev.clientX - rect.x
+      this.offsetY = ev.clientY - rect.y
+    }
+  }
 
   connectedCallback() {
     if (!this.isConnected) return
-    const maxX = this.clientWidth
-    const maxY = this.clientHeight
-    console.log('max', maxX, maxY)
+    this.style.position = 'relative'
+    this.style.display = 'block'
+    this.style.width = this.style.height = '100%'
     for (const child of this.children) {
-      if (!(child instanceof HTMLElement)) continue
-      child.style.position = 'absolute'
-      child.style.left = Math.floor(Math.random() * (1 + maxX - child.offsetWidth)) + 'px'
-      child.style.top = Math.floor(Math.random() * (1 + maxY - child.offsetHeight)) + 'px'
-      child.draggable = true
-      child.ondragstart = (ev) => {
-        if (!(ev.target instanceof HTMLElement)) return
-        this.dragging = child
-        const rect = ev.target.getBoundingClientRect()
-        this.offsetX = ev.clientX - rect.x
-        this.offsetY = ev.clientY - rect.y
-        console.log('offset', this.offsetX, this.offsetY)
-      }
+      if (child instanceof HTMLElement) this.modifyChild(child)
     }
     this.load()
   }
@@ -66,9 +64,10 @@ export class DmBoard extends HTMLElement {
   }
 
   addChild(v: any) {
-    const elem = document.createElement('div')
+    const elem = document.createElement('dm-paper')
+    console.dir(elem)
     elem.id = v.id
-    elem.value = v
+    elem.textContent = JSON.stringify(v)
     elem.classList.add('paper')
     elem.style.top = v.top
     elem.style.left = v.left
@@ -82,7 +81,6 @@ export class DmBoard extends HTMLElement {
       this.offsetY = ev.clientY - rect.y
       console.log('offset', this.offsetX, this.offsetY)
     }
-    this.append(elem)
   }
 }
 

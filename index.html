@@ -10,11 +10,10 @@
         background-color: #000;
         color: #fff;
       }
-      .board {
-        display: block;
-        width: 1400px;
-        height: 900px;
-        border: 1px solid;
+      :root,
+      body {
+        height: 100%;
+        margin: 0;
       }
       .paper {
         width: 105mm;
@@ -28,8 +27,12 @@
       <div id="xxx" class="paper">xxx</div>
       <div id="yyy" class="paper">yyy</div>
       <div id="zzz" class="paper">zzz</div>
-      <template slot="item">huga</template>
+      <span>hoge</span>
     </dm-board>
     <script type="module" src="/src/board.ts"></script>
+    <script>
+      const board = document.getElementById('board')
+      board.addEventListener('moved', console.log)
+    </script>
   </body>
 </html>
